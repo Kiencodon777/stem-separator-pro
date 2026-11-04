@@ -156,43 +156,79 @@ HTML_TEMPLATE = """
                 <p class="text-xs text-slate-400">Hệ thống sẽ tự động trích xuất luồng âm thanh gốc độ phân giải cao và tiến hành tách Stems ngay lập tức.</p>
             </div>
 
-            <!-- Step 2: One-Click Presets -->
-            <div class="space-y-3 pt-2">
-                <label class="block text-sm font-bold text-slate-200 flex items-center gap-2">
-                    <span class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-black">2</span>
-                    Chọn Preset Mục Đích Sử Dụng (One-Click)
-                </label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <!-- Step 2: One-Click Presets & Manual Model Selection -->
+            <div class="space-y-4 pt-2">
+                <div class="flex items-center justify-between">
+                    <label class="block text-sm font-bold text-slate-200 flex items-center gap-2">
+                        <span class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-black">2</span>
+                        Chọn Cấu Hình Model & Preset Tách Nhạc
+                    </label>
+                    <button type="button" onclick="toggleCustomModelMode()" id="customModelToggleBtn" class="text-xs text-cyan-400 hover:text-cyan-300 font-semibold px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-500/20 transition flex items-center gap-1.5">
+                        <span>⚙️</span> <span id="toggleBtnText">Tùy Chọn Model Thủ Công</span>
+                    </button>
+                </div>
+
+                <!-- 4 Quick Presets -->
+                <div id="presetsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
                     <!-- Preset 1 -->
                     <div onclick="selectPreset('karaoke')" id="preset_karaoke" class="preset-card preset-active glass p-4 rounded-xl cursor-pointer border border-white/10 hover:border-cyan-500/40 transition">
                         <div class="text-2xl mb-1.5">🎤</div>
                         <h4 class="text-sm font-bold text-white">Karaoke Chuyên Nghiệp</h4>
-                        <p class="text-xs text-slate-400 mt-1">Beat sạch 100% + Dàn bè đệm hòa âm chuẩn sân khấu.</p>
+                        <p class="text-xs text-slate-400 mt-1">BS-RoFormer SDR 12.97dB + UVR-BVE-4B</p>
                     </div>
                     <!-- Preset 2 -->
                     <div onclick="selectPreset('remix')" id="preset_remix" class="preset-card glass p-4 rounded-xl cursor-pointer border border-white/10 hover:border-cyan-500/40 transition">
                         <div class="text-2xl mb-1.5">🎧</div>
                         <h4 class="text-sm font-bold text-white">Làm Nhạc Remix / Acapella</h4>
-                        <p class="text-xs text-slate-400 mt-1">Lấy giọng ca mộc sạch bóng, lọc sạch tiếng trống & bass.</p>
+                        <p class="text-xs text-slate-400 mt-1">BS-RoFormer + UVR-MDX-NET Lọc triệt để</p>
                     </div>
                     <!-- Preset 3 -->
                     <div onclick="selectPreset('backing')" id="preset_backing" class="preset-card glass p-4 rounded-xl cursor-pointer border border-white/10 hover:border-cyan-500/40 transition">
                         <div class="text-2xl mb-1.5">🎼</div>
                         <h4 class="text-sm font-bold text-white">Bóc Giọng Bè Luyện Thanh</h4>
-                        <p class="text-xs text-slate-400 mt-1">Tách riêng bè cao, bè trầm để phân tích hòa âm và tập hát.</p>
+                        <p class="text-xs text-slate-400 mt-1">UVR-BVE-4B chuyên trị bè cao, bè trầm</p>
                     </div>
                     <!-- Preset 4 -->
                     <div onclick="selectPreset('fast')" id="preset_fast" class="preset-card glass p-4 rounded-xl cursor-pointer border border-white/10 hover:border-cyan-500/40 transition">
                         <div class="text-2xl mb-1.5">⚡</div>
                         <h4 class="text-sm font-bold text-white">Siêu Tốc (Fast Mode)</h4>
-                        <p class="text-xs text-slate-400 mt-1">Chạy nhanh trong 15-20s bằng MDX-Net nhẹ nhàng.</p>
+                        <p class="text-xs text-slate-400 mt-1">MDX-Net siêu nhẹ, xử lý 15-20s</p>
+                    </div>
+                </div>
+
+                <!-- Custom Model Selection Dropdowns (Can be toggled or visible) -->
+                <div id="customModelBox" class="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-cyan-400 mb-1.5 flex items-center gap-1.5">
+                                <span>🎚️</span> Model Giai Đoạn 1: Tách Beat & Vocals (Instrumental)
+                            </label>
+                            <select id="vocalModel" onchange="onManualModelChange()" class="w-full bg-[#131720] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500">
+                                <option value="model_bs_roformer_ep_317_sdr_12.9755.ckpt" selected>BS-RoFormer SDR 12.9755 (Đỉnh cao thế giới hiện nay - Khuyên dùng)</option>
+                                <option value="model_bs_roformer_ep_368_sdr_12.9628.ckpt">BS-RoFormer Viper SDR 12.9628</option>
+                                <option value="deverberate_bs_roformer_8_384dim_10depth.ckpt">BS-RoFormer Deverberate (Khử vang & Reverb)</option>
+                                <option value="UVR-MDX-NET-Voc_FT.onnx">UVR MDX-NET Voc FT (Tốc độ cao, mượt mà)</option>
+                                <option value="UVR_MDXNET_KARA_2.onnx">UVR MDX-NET Kara 2 (Chuyên Beat Karaoke)</option>
+                                <option value="htdemucs_ft.yaml">HTDemucs FT (4-stems chuẩn)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-purple-400 mb-1.5 flex items-center gap-1.5">
+                                <span>🎤</span> Model Giai Đoạn 2: Tách Giọng Hát Chính & Bè (Lead & Backing)
+                            </label>
+                            <select id="backingModel" onchange="onManualModelChange()" class="w-full bg-[#131720] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-purple-500">
+                                <option value="UVR-BVE-4B_SN-44100-2.pth" selected>UVR-BVE-4B SN-44100-2 (Chuyên bóc giọng bè chuẩn nhất)</option>
+                                <option value="UVR-MDX-NET-Voc_FT.onnx">UVR MDX-NET Voc FT (Lọc giọng mộc)</option>
+                                <option value="model_bs_roformer_ep_317_sdr_12.9755.ckpt">BS-RoFormer SDR 12.9755</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] text-slate-400">
+                        <span>💡 Mẹo: Anh có thể chọn nhanh Preset ở trên hoặc tự do mix hai model theo ý thích.</span>
+                        <span id="activePresetBadge" class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono text-[10px]">Preset: Karaoke Pro</span>
                     </div>
                 </div>
             </div>
-
-            <!-- Hidden Advanced Model Inputs (Auto set by Preset) -->
-            <input type="hidden" id="vocalModel" value="model_bs_roformer_ep_317_sdr_12.9755.ckpt">
-            <input type="hidden" id="backingModel" value="UVR-BVE-4B_SN-44100-2.pth">
 
             <!-- Submit Button -->
             <button onclick="startSeparation()" id="submitBtn" class="w-full glow-btn py-4 rounded-xl font-bold text-base text-slate-900 transition flex items-center justify-center space-x-2">
@@ -487,6 +523,30 @@ HTML_TEMPLATE = """
             }
         }
 
+        let showCustomModels = true;
+
+        function toggleCustomModelMode() {
+            const box = document.getElementById('customModelBox');
+            const btnText = document.getElementById('toggleBtnText');
+            showCustomModels = !showCustomModels;
+            if (showCustomModels) {
+                box.classList.remove('hidden');
+                btnText.innerText = "Ẩn Tùy Chọn Model";
+            } else {
+                box.classList.add('hidden');
+                btnText.innerText = "Tùy Chọn Model Thủ Công";
+            }
+        }
+
+        function onManualModelChange() {
+            document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('preset-active'));
+            const badge = document.getElementById('activePresetBadge');
+            if (badge) {
+                badge.innerText = "Chế độ: Tùy Chỉnh Model Riêng";
+                badge.className = "px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono text-[10px]";
+            }
+        }
+
         function selectPreset(preset) {
             document.querySelectorAll('.preset-card').forEach(c => c.classList.remove('preset-active'));
             const card = document.getElementById('preset_' + preset);
@@ -494,19 +554,36 @@ HTML_TEMPLATE = """
 
             const vModel = document.getElementById('vocalModel');
             const bModel = document.getElementById('backingModel');
+            const badge = document.getElementById('activePresetBadge');
 
             if (preset === 'karaoke') {
                 vModel.value = "model_bs_roformer_ep_317_sdr_12.9755.ckpt";
                 bModel.value = "UVR-BVE-4B_SN-44100-2.pth";
+                if (badge) {
+                    badge.innerText = "Preset: Karaoke Pro";
+                    badge.className = "px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono text-[10px]";
+                }
             } else if (preset === 'remix') {
                 vModel.value = "model_bs_roformer_ep_317_sdr_12.9755.ckpt";
                 bModel.value = "UVR-MDX-NET-Voc_FT.onnx";
+                if (badge) {
+                    badge.innerText = "Preset: Remix / Acapella";
+                    badge.className = "px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-mono text-[10px]";
+                }
             } else if (preset === 'backing') {
                 vModel.value = "UVR-BVE-4B_SN-44100-2.pth";
                 bModel.value = "UVR-BVE-4B_SN-44100-2.pth";
+                if (badge) {
+                    badge.innerText = "Preset: Bóc Bè";
+                    badge.className = "px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px]";
+                }
             } else if (preset === 'fast') {
                 vModel.value = "UVR-MDX-NET-Voc_FT.onnx";
                 bModel.value = "UVR-MDX-NET-Voc_FT.onnx";
+                if (badge) {
+                    badge.innerText = "Preset: Siêu Tốc (Fast)";
+                    badge.className = "px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono text-[10px]";
+                }
             }
         }
 
